@@ -3,7 +3,6 @@ package com.cny.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
-import org.redisson.Redisson;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,20 +19,30 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @author : chennengyuan
+ * 分布式锁的实现 （Redis、Zookeeper）
  */
 @Slf4j
 @RestController
 @RequestMapping
-public class LockController {
+public class DistributeLockController {
 
+    /**
+     * SpringDataRedis 客户端
+     */
     @Resource(name = "myRedisTemplate")
     private RedisTemplate<String, String> redisTemplate;
 
+    /**
+     * Redission 客户端
+     */
     @Autowired
     private RedissonClient redissonClient;
 
+    /**
+     * Zookeeper 客户端
+     */
     @Autowired
-    private CuratorFramework client;
+    private CuratorFramework zookeeperClient;
 
     /**
      * 基于Zookeeper的客户端Curator实现分布式锁
@@ -42,7 +51,7 @@ public class LockController {
      */
     @GetMapping("/curatorLock")
     public String curatorLock() {
-        InterProcessMutex lock = new InterProcessMutex(client, "/user");
+        InterProcessMutex lock = new InterProcessMutex(zookeeperClient, "/user");
         try {
             if (lock.acquire(6, TimeUnit.SECONDS)) {
                 log.info("获取到锁成功 - {}", Thread.currentThread().getName());
