@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: distribute-lock
+  redis:
+    host: 192.168.247.5
+    port: 6379
+
